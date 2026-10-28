@@ -38,7 +38,7 @@ export const CheckoutScreen: React.FC = () => {
     } = useShop();
 
     const { width } = useWindowDimensions();
-    const isLargeScreen = width > 768;
+    const isLargeScreen = width >= 1024;
 
     const [fullName, setFullName] = useState(user?.savedAddress?.fullName || user?.name || '');
     const [address, setAddress] = useState(user?.savedAddress?.address || '');
@@ -229,9 +229,14 @@ export const CheckoutScreen: React.FC = () => {
                     ))}
                 </View>
 
-                <View style={[styles.layoutWrapper, isLargeScreen && styles.layoutWrapperRow]}>
+                <View
+                    style={[
+                        styles.layoutWrapper,
+                        isLargeScreen ? styles.layoutWrapperRow : styles.layoutWrapperMobile,
+                    ]}
+                >
                     {/* Left Checkout Details Form */}
-                    <View style={styles.formContainer}>
+                    <View style={[styles.formContainer, !isLargeScreen && styles.formContainerMobile]}>
                         {/* Step 1: Shipping Address */}
                         {currentStep === 1 && (
                         <View style={styles.sectionCard}>
@@ -457,8 +462,8 @@ export const CheckoutScreen: React.FC = () => {
                     </View>
 
                     {/* Right Order Review & Place Action */}
-                    {currentStep === 3 && <View style={styles.reviewContainer}>
-                        <View style={styles.reviewCard}>
+                    {currentStep === 3 && <View style={[styles.reviewContainer, !isLargeScreen && styles.reviewContainerMobile]}>
+                        <View style={[styles.reviewCard, !isLargeScreen && styles.reviewCardMobile]}>
                             <Text style={styles.reviewTitle}>Récapitulatif</Text>
                             <View style={styles.confirmationDetails}>
                                 <Text style={styles.confirmationLabel}>Livraison</Text>
@@ -657,9 +662,17 @@ const styles = StyleSheet.create({
     layoutWrapperRow: {
         flexDirection: 'row',
     },
+    layoutWrapperMobile: {
+        gap: 12,
+    },
     formContainer: {
         flex: 2,
         gap: 20,
+    },
+    formContainerMobile: {
+        flexGrow: 0,
+        flexShrink: 0,
+        flexBasis: 'auto',
     },
     stepContinueBtn: {
         backgroundColor: '#111111',
@@ -887,12 +900,21 @@ const styles = StyleSheet.create({
     reviewContainer: {
         flex: 1,
     },
+    reviewContainerMobile: {
+        flexGrow: 0,
+        flexShrink: 0,
+        flexBasis: 'auto',
+        marginTop: 0,
+    },
     reviewCard: {
         backgroundColor: '#f8fafc',
         borderRadius: 24,
         padding: 24,
         borderWidth: 1,
         borderColor: '#f1f5f9',
+    },
+    reviewCardMobile: {
+        padding: 16,
     },
     reviewTitle: {
         fontSize: 18,
