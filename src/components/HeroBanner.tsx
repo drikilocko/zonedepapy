@@ -34,6 +34,8 @@ const slides = [
     },
 ];
 
+const carouselSlides = [...slides, slides[0]];
+
 type HeroBannerProps = {
     horizontalBleed: number;
 };
@@ -48,10 +50,10 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ horizontalBleed }) => {
 
     useEffect(() => {
         const timer = setInterval(() => {
-            const nextSlide = (activeSlideRef.current + 1) % slides.length;
-            activeSlideRef.current = nextSlide;
-            setActiveSlide(nextSlide);
-            scrollRef.current?.scrollTo({ x: width * nextSlide, animated: true });
+            const nextPosition = activeSlideRef.current + 1;
+            activeSlideRef.current = nextPosition;
+            setActiveSlide(nextPosition % slides.length);
+            scrollRef.current?.scrollTo({ x: width * nextPosition, animated: true });
         }, SLIDE_INTERVAL);
 
         return () => clearInterval(timer);
@@ -64,9 +66,16 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ horizontalBleed }) => {
     };
 
     const handleSlideChange = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-        const nextSlide = Math.round(event.nativeEvent.contentOffset.x / width);
-        activeSlideRef.current = nextSlide;
-        setActiveSlide(nextSlide);
+        const nextPosition = Math.round(event.nativeEvent.contentOffset.x / width);
+        if (nextPosition === slides.length) {
+            activeSlideRef.current = 0;
+            setActiveSlide(0);
+            scrollRef.current?.scrollTo({ x: 0, animated: false });
+            return;
+        }
+
+        activeSlideRef.current = nextPosition;
+        setActiveSlide(nextPosition);
     };
 
     const goToSlide = (index: number) => {
@@ -90,15 +99,15 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ horizontalBleed }) => {
                 showsHorizontalScrollIndicator={false}
                 onMomentumScrollEnd={handleSlideChange}
             >
-                {slides.map((slide) => (
+                {carouselSlides.map((slide, index) => (
                     <ImageBackground
-                        key={slide.category}
+                        key={`${slide.category}-${index}`}
                         source={{ uri: slide.image }}
                         resizeMode="cover"
                         style={[styles.slide, { width, height }]}
                     >
                         <LinearGradient
-                            colors={['rgba(0,0,0,0.95)', 'rgba(0,0,0,0.82)', 'rgba(0,0,0,0.48)', 'rgba(0,0,0,0)']}
+                            colors={['rgba(0,0,0,0.78)', 'rgba(0,0,0,0.62)', 'rgba(0,0,0,0.30)', 'rgba(0,0,0,0)']}
                             locations={[0, 0.38, 0.72, 1]}
                             start={{ x: 0, y: 0.5 }}
                             end={{ x: 1, y: 0.5 }}
@@ -113,7 +122,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ horizontalBleed }) => {
                         <View style={[styles.contentWrapper, { width: Math.min(width * 0.72, 640) }]}>
                             <Text style={styles.categoryText}>{slide.category}</Text>
                             <Text style={styles.titleText}>
-                                $20 OFF $100 PLUS,{'\n'}GET FREE NEXT-DAY DELIVERY
+                                {'$20 OFF $100 PLUS,'}{'\n'}{'GET FREE NEXT-DAY DELIVERY'}
                             </Text>
                             <Text style={styles.subtitleText}>With code: 20100</Text>
 

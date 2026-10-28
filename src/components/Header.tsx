@@ -41,15 +41,17 @@ export const Header: React.FC<{ overlay?: boolean }> = ({ overlay = false }) => 
             )}
             <View style={styles.topRow}>
                 {/* Brand Logo */}
-                <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => navigateTo('shop')}
-                    style={styles.logoContainer}
-                >
-                    <Text style={[styles.logoText, overlay && styles.overlayLogoText, isSmall && styles.logoTextSmall]}>
-                        Zone de Papy
-                    </Text>
-                </TouchableOpacity>
+                {!isMobile && (
+                    <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={() => navigateTo('shop')}
+                        style={styles.logoContainer}
+                    >
+                        <Text style={[styles.logoText, overlay && styles.overlayLogoText, isSmall && styles.logoTextSmall]}>
+                            Zone de Papy
+                        </Text>
+                    </TouchableOpacity>
+                )}
 
                 {/* Desktop Search Input Bar */}
                 {!isMobile && (

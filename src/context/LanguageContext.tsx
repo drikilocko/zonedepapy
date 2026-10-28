@@ -228,6 +228,30 @@ const frenchTranslations: Record<string, string> = {
     'e.g. Alex Morgan': 'Ex. : Alex Morgan',
     'alex.morgan@gmail.com': 'alex.morgan@gmail.com',
     'Based on ': 'Basé sur ',
+    SALE: 'PROMO',
+    '$20 OFF $100 PLUS,': '20 $ DE RÉDUCTION DÈS 100 $,',
+    'GET FREE NEXT-DAY DELIVERY': 'LIVRAISON GRATUITE LE LENDEMAIN',
+    'CODE APPLIED ✓': 'CODE APPLIQUÉ ✓',
+    EXPLORE: 'DÉCOUVRIR',
+    ADMIN: 'ADMIN',
+    Password: 'Mot de passe',
+    'e.g. Sarah B.': 'Ex. : Sarah B.',
+    'What did you love about the fit, fabric, or style?': 'Qu’avez-vous aimé dans le design, les matériaux ou le style ?',
+    'NEW IN': 'NOUVEAUTÉ',
+    'Choose delivery location': 'Choisir le lieu de livraison',
+    'Search an address or move the map pin': 'Rechercher une adresse ou déplacer le repère',
+    'Street, city or postal code': 'Rue, ville ou code postal',
+    'Tap the map or drag the pin to adjust your delivery point.': 'Touchez la carte ou déplacez le repère pour ajuster le lieu de livraison.',
+    'Finding address...': 'Recherche de l’adresse...',
+    'Confirm this location': 'Confirmer ce lieu',
+    'Close map': 'Fermer la carte',
+    'Search address': 'Rechercher une adresse',
+    'Use my current location': 'Utiliser ma position actuelle',
+    'September 2026': 'Septembre 2026',
+    '+18.4% this month': '+18,4 % ce mois-ci',
+    'e.g. Wireless headphones': 'Ex. : Casque sans fil',
+    'e.g. Smartphone, Laptop, Speaker': 'Ex. : Smartphone, ordinateur, enceinte',
+    'Storage, connectivity, battery...': 'Stockage, connectivité, batterie...',
 };
 
 interface LanguageContextValue {
@@ -238,7 +262,7 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [language, setLanguageState] = useState<Language>('en');
+    const [language, setLanguageState] = useState<Language>('fr');
 
     useEffect(() => {
         let mounted = true;
