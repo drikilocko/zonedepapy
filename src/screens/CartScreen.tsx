@@ -44,9 +44,15 @@ export const CartScreen: React.FC = () => {
         <View style={styles.container}>
             <Header />
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={[
+                    styles.scrollContent,
+                    !isLargeScreen && styles.scrollContentMobile,
+                ]}
+            >
                 {/* Header Breadcrumb */}
-                <View style={styles.topHeader}>
+                <View style={[styles.topHeader, !isLargeScreen && styles.topHeaderMobile]}>
                     <TouchableOpacity style={styles.backBtn} onPress={() => navigateTo('shop')}>
                         <Feather name="arrow-left" size={16} color="#475569" />
                         <Text style={styles.backBtnText}>Continue Shopping</Text>
@@ -202,13 +208,24 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         paddingHorizontal: 24,
-        paddingVertical: 16,
+        paddingTop: 16,
+        paddingBottom: 24,
+    },
+    scrollContentMobile: {
+        paddingHorizontal: 16,
+        paddingTop: 8,
+        paddingBottom: 16,
     },
     topHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         marginBottom: 24,
+    },
+    topHeaderMobile: {
+        flexWrap: 'wrap',
+        gap: 10,
+        marginBottom: 16,
     },
     backBtn: {
         flexDirection: 'row',

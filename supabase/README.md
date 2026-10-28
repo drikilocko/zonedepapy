@@ -12,7 +12,7 @@
 
 The local app configuration is in `.env.local`; `.env.example` shows the required variable names. The publishable key is intended for client use. Never put a Supabase secret/service-role key in the app.
 
-Email/password authentication is ready. To use Google sign-in, enable the Google provider in Supabase Authentication and configure its OAuth credentials and redirect URLs for the app's local and deployed origins.
+Email/password authentication is ready. To use Google sign-in, enable the Google provider in Supabase Authentication and configure its OAuth credentials. Add `https://www.dreamyyspace.com/` to **Authentication → URL Configuration → Redirect URLs** in Supabase. Local web development uses the current `localhost` origin, which must also be allowed.
 
 ## PayDunya mobile-money checkout
 

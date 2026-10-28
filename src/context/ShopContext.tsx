@@ -89,10 +89,15 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const loginWithGoogle = async () => {
         clearBackendError();
+        const redirectTo = typeof window === 'undefined'
+            ? undefined
+            : window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? window.location.origin
+                : 'https://www.dreamyyspace.com/';
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: typeof window === 'undefined' ? undefined : window.location.origin,
+                redirectTo,
             },
         });
         if (error) {
