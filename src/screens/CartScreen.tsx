@@ -30,7 +30,7 @@ export const CartScreen: React.FC = () => {
     } = useShop();
 
     const { width } = useWindowDimensions();
-    const isLargeScreen = width > 768;
+    const isLargeScreen = width >= 1024;
 
     const [inputCode, setInputCode] = useState('');
     const [promoFeedback, setPromoFeedback] = useState<{ success?: boolean; message?: string }>({});
