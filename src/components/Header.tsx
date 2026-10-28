@@ -174,20 +174,6 @@ export const Header: React.FC<{ overlay?: boolean }> = ({ overlay = false }) => 
                         </View>
                     </TouchableOpacity>
 
-                    {/* Explore / Foot Locker Sections Button */}
-                    <TouchableOpacity
-                        style={[styles.adminButton, styles.exploreButton]}
-                        onPress={() => navigateTo(activeScreen === 'explore' ? 'shop' : 'explore')}
-                        activeOpacity={0.7}
-                    >
-                        <Ionicons name="compass-outline" size={15} color="#ffffff" />
-                        {!isMobile && (
-                            <Text style={[styles.adminButtonText, styles.exploreButtonText]}>
-                                EXPLORE
-                            </Text>
-                        )}
-                    </TouchableOpacity>
-
                     {user?.role === 'admin' && (
                         <TouchableOpacity
                             style={[
@@ -530,13 +516,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
         borderWidth: 1,
         borderColor: '#d4d4d4',
-    },
-    exploreButton: {
-        backgroundColor: '#111111',
-        borderColor: '#111111',
-    },
-    exploreButtonText: {
-        color: '#ffffff',
     },
     overlayAdminButton: {
         backgroundColor: 'rgba(255,255,255,0.16)',

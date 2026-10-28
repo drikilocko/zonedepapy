@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+    Platform,
     View,
     Image,
     TouchableOpacity,
@@ -34,6 +35,22 @@ export const CartScreen: React.FC = () => {
     const [inputCode, setInputCode] = useState('');
     const [promoFeedback, setPromoFeedback] = useState<{ success?: boolean; message?: string }>({});
 
+    useEffect(() => {
+        if (Platform.OS !== 'web') return;
+
+        const root = document.documentElement;
+        const body = document.body;
+        const previousRootBehavior = root.style.overscrollBehavior;
+        const previousBodyBehavior = body.style.overscrollBehavior;
+        root.style.overscrollBehavior = 'none';
+        body.style.overscrollBehavior = 'none';
+
+        return () => {
+            root.style.overscrollBehavior = previousRootBehavior;
+            body.style.overscrollBehavior = previousBodyBehavior;
+        };
+    }, []);
+
     const handleApplyPromo = () => {
         if (!inputCode.trim()) return;
         const res = applyPromoCode(inputCode);
@@ -45,6 +62,9 @@ export const CartScreen: React.FC = () => {
             <Header />
 
             <ScrollView
+                bounces={false}
+                alwaysBounceVertical={false}
+                overScrollMode="never"
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={[
                     styles.scrollContent,
