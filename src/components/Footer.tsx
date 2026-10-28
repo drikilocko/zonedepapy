@@ -1,17 +1,15 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { LocalizedText as Text } from '../context/LanguageContext';
+import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useShop } from '../context/ShopContext';
 
 type FooterProps = {
     horizontalBleed?: number;
 };
 
-const serviceHighlights: { icon: React.ComponentProps<typeof Feather>['name']; label: string }[] = [
-    { icon: 'zap', label: 'Une sélection tech pour tous les jours' },
-    { icon: 'smartphone', label: 'Paiement mobile disponible' },
-    { icon: 'package', label: 'Suivez vos commandes depuis votre compte' },
+const serviceHighlights = [
+    'Une sélection technologique pour le quotidien',
+    'Paiement mobile simple et sécurisé',
+    'Suivi de commande depuis votre compte',
 ];
 
 export const Footer: React.FC<FooterProps> = ({ horizontalBleed = 0 }) => {
@@ -49,12 +47,9 @@ export const Footer: React.FC<FooterProps> = ({ horizontalBleed = 0 }) => {
         <View style={[styles.footer, horizontalBleed > 0 && { marginHorizontal: -horizontalBleed }]}>
             <View style={styles.content}>
                 <View style={[styles.serviceRow, isMobile && styles.serviceRowMobile]}>
-                    {serviceHighlights.map((item) => (
-                        <View key={item.label} style={styles.serviceItem}>
-                            <View style={styles.serviceIcon}>
-                                <Feather name={item.icon} size={17} color="#c7a6ff" />
-                            </View>
-                            <Text style={styles.serviceText}>{item.label}</Text>
+                    {serviceHighlights.map((label) => (
+                        <View key={label} style={styles.serviceItem}>
+                            <Text style={styles.serviceText}>{label}</Text>
                         </View>
                     ))}
                 </View>
@@ -63,29 +58,26 @@ export const Footer: React.FC<FooterProps> = ({ horizontalBleed = 0 }) => {
                     <View style={[styles.brandColumn, isMobile && styles.brandColumnMobile]}>
                         <TouchableOpacity
                             accessibilityRole="button"
-                            accessibilityLabel="Zone de Papy"
+                            accessibilityLabel="Accueil Zone de Papy"
                             onPress={() => navigateTo('shop')}
                             activeOpacity={0.8}
                             style={styles.brandLockup}
                         >
-                            <View style={styles.brandMark}>
-                                <Text style={styles.brandMarkText}>ZP</Text>
-                            </View>
                             <Text style={styles.brandName}>Zone de Papy</Text>
                         </TouchableOpacity>
                         <Text style={styles.brandDescription}>
-                            La technologie utile, soigneusement sélectionnée pour accompagner votre quotidien.
+                            Des produits technologiques soigneusement sélectionnés pour simplifier votre quotidien.
                         </Text>
                     </View>
 
-                    {linkColumn('Découvrir', [
-                        { label: 'Toute la boutique', onPress: () => navigateTo('shop') },
+                    {linkColumn('La boutique', [
+                        { label: 'Tous les produits', onPress: () => navigateTo('shop') },
                         { label: 'Explorer', onPress: () => navigateTo('explore') },
                         { label: 'Accessoires', onPress: () => openCategory('ACCESSORIES') },
                         { label: 'Jeux vidéo', onPress: () => openCategory('GAMING') },
                     ])}
 
-                    {linkColumn('Votre espace', [
+                    {linkColumn('Mon espace', [
                         { label: 'Mon compte', onPress: () => navigateTo('account') },
                         { label: 'Mes favoris', onPress: () => navigateTo('wishlist') },
                         { label: 'Mon panier', onPress: () => navigateTo('cart') },
@@ -94,7 +86,7 @@ export const Footer: React.FC<FooterProps> = ({ horizontalBleed = 0 }) => {
 
                 <View style={[styles.bottomBar, isMobile && styles.bottomBarMobile]}>
                     <Text style={styles.copyright}>© {year} Zone de Papy. Tous droits réservés.</Text>
-                    <Text style={styles.bottomNote}>Pensé pour votre quotidien.</Text>
+                    <Text style={styles.bottomNote}>La technologie, en toute simplicité.</Text>
                 </View>
             </View>
         </View>
@@ -103,7 +95,7 @@ export const Footer: React.FC<FooterProps> = ({ horizontalBleed = 0 }) => {
 
 const styles = StyleSheet.create({
     footer: {
-        backgroundColor: '#11131a',
+        backgroundColor: '#080808',
         marginTop: 52,
         paddingHorizontal: 24,
         paddingTop: 28,
@@ -121,32 +113,24 @@ const styles = StyleSheet.create({
         gap: 16,
         paddingBottom: 26,
         borderBottomWidth: 1,
-        borderBottomColor: '#292b34',
+        borderBottomColor: '#333333',
     },
     serviceRowMobile: {
         flexDirection: 'column',
         gap: 14,
     },
     serviceItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
         flex: 1,
         minWidth: 210,
-    },
-    serviceIcon: {
-        width: 34,
-        height: 34,
-        borderRadius: 17,
-        backgroundColor: '#25212f',
-        alignItems: 'center',
-        justifyContent: 'center',
+        paddingRight: 12,
     },
     serviceText: {
-        color: '#d3d4dc',
+        color: '#ffffff',
         fontSize: 12,
         fontWeight: '600',
         flexShrink: 1,
+        fontFamily: 'Montserrat_500Medium',
+        lineHeight: 19,
     },
     mainGrid: {
         flexDirection: 'row',
@@ -168,37 +152,22 @@ const styles = StyleSheet.create({
         paddingRight: 0,
     },
     brandLockup: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 11,
         alignSelf: 'flex-start',
-    },
-    brandMark: {
-        width: 38,
-        height: 38,
-        borderRadius: 12,
-        backgroundColor: '#8b5cf6',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    brandMarkText: {
-        color: '#ffffff',
-        fontSize: 13,
-        fontWeight: '900',
-        letterSpacing: 0.4,
     },
     brandName: {
         color: '#ffffff',
-        fontSize: 17,
-        fontWeight: '800',
-        letterSpacing: -0.4,
+        fontSize: 20,
+        fontWeight: '900',
+        letterSpacing: 0.2,
+        fontFamily: 'Montserrat_800ExtraBold',
     },
     brandDescription: {
-        color: '#a5a6b0',
+        color: '#bdbdbd',
         fontSize: 12,
         lineHeight: 20,
         marginTop: 14,
         maxWidth: 310,
+        fontFamily: 'Montserrat_400Regular',
     },
     linkColumn: {
         flex: 1,
@@ -212,18 +181,20 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         fontSize: 12,
         fontWeight: '800',
-        letterSpacing: 0.8,
+        letterSpacing: 1,
         textTransform: 'uppercase',
         marginBottom: 14,
+        fontFamily: 'Montserrat_700Bold',
     },
     linkButton: {
         alignSelf: 'flex-start',
         paddingVertical: 5,
     },
     linkText: {
-        color: '#a5a6b0',
+        color: '#bdbdbd',
         fontSize: 12,
         fontWeight: '500',
+        fontFamily: 'Montserrat_500Medium',
     },
     bottomBar: {
         flexDirection: 'row',
@@ -231,18 +202,20 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         gap: 8,
         borderTopWidth: 1,
-        borderTopColor: '#292b34',
+        borderTopColor: '#333333',
         paddingTop: 17,
     },
     bottomBarMobile: {
         flexDirection: 'column',
     },
     copyright: {
-        color: '#858691',
+        color: '#a6a6a6',
         fontSize: 10,
+        fontFamily: 'Montserrat_400Regular',
     },
     bottomNote: {
-        color: '#858691',
+        color: '#a6a6a6',
         fontSize: 10,
+        fontFamily: 'Montserrat_400Regular',
     },
 });
