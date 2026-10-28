@@ -285,14 +285,17 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     cartLayoutMobile: {
-        gap: 12,
+        alignItems: 'stretch',
+        gap: 8,
     },
     itemsListContainer: {
         flex: 2,
         gap: 16,
     },
     itemsListContainerMobile: {
-        flex: 0,
+        flexGrow: 0,
+        flexShrink: 0,
+        flexBasis: 'auto',
     },
     cartItemCard: {
         flexDirection: 'row',
@@ -389,8 +392,11 @@ const styles = StyleSheet.create({
         borderColor: '#f1f5f9',
     },
     summaryCardMobile: {
-        flex: 0,
-        padding: 18,
+        flexGrow: 0,
+        flexShrink: 0,
+        flexBasis: 'auto',
+        marginTop: 0,
+        padding: 16,
     },
     summaryTitle: {
         fontSize: 18,
