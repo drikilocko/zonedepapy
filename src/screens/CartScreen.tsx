@@ -72,9 +72,14 @@ export const CartScreen: React.FC = () => {
                         </TouchableOpacity>
                     </View>
                 ) : (
-                    <View style={[styles.cartLayout, isLargeScreen && styles.cartLayoutRow]}>
+                    <View
+                        style={[
+                            styles.cartLayout,
+                            isLargeScreen ? styles.cartLayoutRow : styles.cartLayoutMobile,
+                        ]}
+                    >
                         {/* Left Items List */}
-                        <View style={styles.itemsListContainer}>
+                        <View style={[styles.itemsListContainer, !isLargeScreen && styles.itemsListContainerMobile]}>
                             {cart.map((item, idx) => (
                                 <View key={`${item.product.id}-${item.selectedColor.name}-${idx}`} style={styles.cartItemCard}>
                                     <Image source={{ uri: item.product.images[0] }} style={styles.itemImage} />
@@ -125,7 +130,7 @@ export const CartScreen: React.FC = () => {
                         </View>
 
                         {/* Right Order Summary & Promo Code Box */}
-                        <View style={styles.summaryCard}>
+                        <View style={[styles.summaryCard, !isLargeScreen && styles.summaryCardMobile]}>
                             <Text style={styles.summaryTitle}>Order Summary</Text>
 
                             {/* Promo Code Input Box */}
@@ -279,9 +284,15 @@ const styles = StyleSheet.create({
     cartLayoutRow: {
         flexDirection: 'row',
     },
+    cartLayoutMobile: {
+        gap: 12,
+    },
     itemsListContainer: {
         flex: 2,
         gap: 16,
+    },
+    itemsListContainerMobile: {
+        flex: 0,
     },
     cartItemCard: {
         flexDirection: 'row',
@@ -376,6 +387,10 @@ const styles = StyleSheet.create({
         padding: 24,
         borderWidth: 1,
         borderColor: '#f1f5f9',
+    },
+    summaryCardMobile: {
+        flex: 0,
+        padding: 18,
     },
     summaryTitle: {
         fontSize: 18,
