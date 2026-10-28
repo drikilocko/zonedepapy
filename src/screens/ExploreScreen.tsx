@@ -12,6 +12,7 @@ import { LocalizedText as Text } from '../context/LanguageContext';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useShop } from '../context/ShopContext';
 import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
 
 export const ExploreScreen: React.FC = () => {
     const { navigateTo, setFilterState } = useShop();
@@ -275,6 +276,7 @@ export const ExploreScreen: React.FC = () => {
                         </TouchableOpacity>
                     ))}
                 </View>
+                <Footer />
             </ScrollView>
         </View>
     );

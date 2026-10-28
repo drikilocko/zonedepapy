@@ -6,6 +6,7 @@ import { FlashSaleTimer } from '../components/FlashSaleTimer';
 import { HeroBanner } from '../components/HeroBanner';
 import { FilterBar } from '../components/FilterBar';
 import { ProductCard } from '../components/ProductCard';
+import { Footer } from '../components/Footer';
 
 export const ShopScreen: React.FC = () => {
     const { products, filterState } = useShop();
@@ -111,6 +112,7 @@ export const ShopScreen: React.FC = () => {
                         </View>
                     )}
                 </View>
+                <Footer horizontalBleed={horizontalPad} />
             </ScrollView>
         </View>
     );

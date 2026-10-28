@@ -161,9 +161,16 @@ export const Header: React.FC<{ overlay?: boolean }> = ({ overlay = false }) => 
                         style={[styles.iconButton, overlay && styles.overlayIconButton]}
                         onPress={() => navigateTo('cart')}
                         activeOpacity={0.7}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Shopping cart, ${cartCount} items`}
                     >
-                        <View style={[styles.cartIconWrapper, overlay && styles.overlayCartIconWrapper]}>
-                            <Text style={[styles.cartCountBadgeText, overlay && styles.overlayCartCountBadgeText]}>{cartCount}</Text>
+                        <View style={styles.cartIconWrapper}>
+                            <Feather name="shopping-cart" size={19} color={overlay ? '#ffffff' : '#111111'} />
+                            {cartCount > 0 && (
+                                <View style={styles.cartCountBadge}>
+                                    <Text style={styles.cartCountBadgeText}>{cartCount}</Text>
+                                </View>
+                            )}
                         </View>
                     </TouchableOpacity>
 
@@ -490,21 +497,28 @@ const styles = StyleSheet.create({
     cartIconWrapper: {
         width: 28,
         height: 28,
-        borderRadius: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+    },
+    cartCountBadge: {
+        position: 'absolute',
+        top: -4,
+        right: -5,
+        minWidth: 16,
+        height: 16,
+        borderRadius: 8,
+        paddingHorizontal: 3,
         backgroundColor: '#111111',
         alignItems: 'center',
         justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#ffffff',
     },
     cartCountBadgeText: {
         color: '#ffffff',
-        fontSize: 12,
+        fontSize: 9,
         fontWeight: '800',
-    },
-    overlayCartIconWrapper: {
-        backgroundColor: '#ffffff',
-    },
-    overlayCartCountBadgeText: {
-        color: '#111111',
     },
     adminButton: {
         flexDirection: 'row',

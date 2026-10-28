@@ -193,4 +193,23 @@ export const PRODUCTS: Product[] = [
         isNewIn: true,
         productType: 'Gaming',
     },
+    {
+        id: 'electronics-usb-light-01',
+        name: 'Mini USB LED Light',
+        category: 'ACCESSORIES',
+        brand: 'Zone de Papy Tech',
+        price: 300 / 610,
+        rating: 4.5,
+        reviewsCount: 12,
+        images: [
+            'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=800&q=80',
+        ],
+        colors: [
+            { name: 'White', hex: '#f8fafc' },
+        ],
+        description: 'A compact USB-powered LED light for a desk, laptop, or power bank.',
+        specifications: 'USB powered • Low energy LED • Compact portable design',
+        isNewIn: true,
+        productType: 'Accessory',
+    },
 ];

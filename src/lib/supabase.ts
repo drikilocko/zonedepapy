@@ -26,3 +26,13 @@ export const getErrorMessage = (error: unknown): string => {
     }
     return String(error);
 };
+
+export const isExpiredJwtError = (error: unknown): boolean => {
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'PGRST301') {
+        return true;
+    }
+
+    const message = getErrorMessage(error).toLowerCase();
+    return /\b(?:jwt|token|session)\b.*\b(?:expired|invalid)\b/.test(message)
+        || /\b(?:expired|invalid)\b.*\b(?:jwt|token|session)\b/.test(message);
+};

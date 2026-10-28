@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
 import { Product, CartItem, FilterState, CurrencyCode, Currency, Order, User } from '../types';
 import { PRODUCTS, CATEGORIES, CURRENCIES } from '../data/mockData';
-import { getErrorMessage, supabase } from '../lib/supabase';
+import { getErrorMessage, isExpiredJwtError, supabase } from '../lib/supabase';
 
 type ScreenName = 'shop' | 'product-detail' | 'cart' | 'checkout' | 'order-success' | 'wishlist' | 'admin' | 'account' | 'explore';
 
@@ -75,6 +75,18 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const clearBackendError = () => setBackendError(null);
 
+    const reportBackendError = (error: unknown) => {
+        if (isExpiredJwtError(error)) {
+            setBackendError(null);
+            setUser(null);
+            setOrders([]);
+            setWishlist([]);
+            setShowAuthModal(true);
+            return;
+        }
+        setBackendError(getErrorMessage(error));
+    };
+
     const loginWithGoogle = async () => {
         clearBackendError();
         const { error } = await supabase.auth.signInWithOAuth({
@@ -126,7 +138,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearBackendError();
         const { error } = await supabase.rpc('save_shipping_address', { address });
         if (error) {
-            setBackendError(error.message);
+            reportBackendError(error);
             throw error;
         }
         setUser((currentUser) => currentUser ? { ...currentUser, savedAddress: address } : currentUser);
@@ -180,7 +192,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setWishlist((wishlistRows || []).map((row) => row.product_id));
             } catch (error) {
                 if (!mounted || requestId !== authRequest) return;
-                setBackendError(getErrorMessage(error));
+                reportBackendError(error);
             } finally {
                 if (mounted && requestId === authRequest) setAuthLoading(false);
             }
@@ -201,7 +213,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setProductList(catalogProducts.length > 0 ? catalogProducts : PRODUCTS);
                 }
             } catch (error) {
-                if (mounted) setBackendError(getErrorMessage(error));
+                if (mounted) reportBackendError(error);
             }
         };
 
@@ -215,7 +227,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         }).catch((error: unknown) => {
             if (mounted) {
-                setBackendError(getErrorMessage(error));
+                reportBackendError(error);
                 setAuthLoading(false);
             }
         });
@@ -332,7 +344,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
             : supabase.from('wishlist_items').insert({ user_id: user.id, product_id: productId });
         const { error } = await query;
         if (error) {
-            setBackendError(error.message);
+            reportBackendError(error);
             return;
         }
         setWishlist((prev) => isSaved ? prev.filter((id) => id !== productId) : [...prev, productId]);
@@ -395,7 +407,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearBackendError();
         const { error } = await supabase.from('orders').update({ status }).eq('id', orderId);
         if (error) {
-            setBackendError(error.message);
+            reportBackendError(error);
             return;
         }
         setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status } : o)));
@@ -412,7 +424,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         const { error } = await supabase.from('products').insert({ id: created.id, data: newP });
         if (error) {
-            setBackendError(error.message);
+            reportBackendError(error);
             return;
         }
         setProductList((prev) => [created, ...prev]);
@@ -422,7 +434,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearBackendError();
         const { error } = await supabase.from('products').delete().eq('id', productId);
         if (error) {
-            setBackendError(error.message);
+            reportBackendError(error);
             return;
         }
         setProductList((prev) => prev.filter((p) => p.id !== productId));
@@ -473,7 +485,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
             estimated_delivery: newOrder.estimatedDelivery,
         });
         if (error) {
-            setBackendError(error.message);
+            reportBackendError(error);
             throw error;
         }
         setActiveOrder(newOrder);

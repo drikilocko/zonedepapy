@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Modal, Platform, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { LocalizedText as Text, LocalizedTextInput as TextInput } from '../context/LanguageContext';
 import { Feather, Ionicons } from '@expo/vector-icons';
+import { WebView } from 'react-native-webview';
 
 interface LeafletMapPickerProps {
     onSelectAddress: (data: { address: string; city: string; postalCode: string; lat?: number; lng?: number }) => void;
@@ -37,6 +38,256 @@ const isGeocodedPlace = (value: unknown): value is GeocodedPlace =>
     && 'lon' in value
     && typeof value.lon === 'string';
 
+const getLeafletMapHtml = ({ lat, lng }: Coordinates) => `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+        <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.css"/>
+        <script type="importmap">
+          {
+            "imports": {
+              "leaflet": "https://unpkg.com/leaflet@1.9.4/dist/leaflet-src.esm.js",
+              "maplibre-gl": "https://unpkg.com/maplibre-gl@6.16.0/dist/maplibre-gl.mjs"
+            }
+          }
+        </script>
+        <style>
+          * { box-sizing: border-box; }
+          html, body, #map {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: #f4f1fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          }
+
+          /* Modern & clean map styling */
+          .leaflet-tile {
+            filter: saturate(1.08) contrast(1.02);
+          }
+
+          .leaflet-control-attribution {
+            padding: 4px 8px !important;
+            border: 1px solid rgba(139, 114, 230, 0.12) !important;
+            border-radius: 9px 0 0 0 !important;
+            color: #5b556b !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            font-size: 10px !important;
+            box-shadow: 0 2px 8px rgba(35, 20, 75, 0.08) !important;
+          }
+          .leaflet-control-attribution a { color: #5d45b5 !important; }
+
+          /* Premium Glassmorphic Zoom Controls */
+          .leaflet-bar {
+            border: none !important;
+            box-shadow: 0 4px 18px rgba(35, 20, 75, 0.14) !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+            background: rgba(255, 255, 255, 0.94) !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            margin: 14px !important;
+          }
+          .leaflet-bar a,
+          .leaflet-bar a:hover {
+            width: 38px !important;
+            height: 38px !important;
+            line-height: 38px !important;
+            font-size: 20px !important;
+            font-weight: 500 !important;
+            color: #4b3894 !important;
+            background: transparent !important;
+            border-color: rgba(139, 114, 230, 0.15) !important;
+            transition: all 0.2s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+          .leaflet-bar a:first-child {
+            border-bottom: 1px solid rgba(139, 114, 230, 0.12) !important;
+          }
+          .leaflet-bar a:hover {
+            background: #8b72e6 !important;
+            color: #ffffff !important;
+          }
+          .leaflet-bar a:active {
+            background: #7353dc !important;
+            transform: scale(0.96);
+          }
+
+          /* Custom Animated Marker */
+          .zone-pin-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+          }
+          .zone-pin-wrapper:active {
+            cursor: grabbing;
+          }
+
+          /* Pulsing base radar ring */
+          .zone-pin-pulse {
+            position: absolute;
+            bottom: -3px;
+            left: 50%;
+            transform: translate(-50%, 50%);
+            width: 24px;
+            height: 10px;
+            background: rgba(139, 114, 230, 0.4);
+            border-radius: 50%;
+            animation: pinRadar 2s ease-out infinite;
+            pointer-events: none;
+          }
+
+          @keyframes pinRadar {
+            0% {
+              transform: translate(-50%, 50%) scale(0.6);
+              opacity: 0.9;
+            }
+            50% {
+              transform: translate(-50%, 50%) scale(1.9);
+              opacity: 0.25;
+            }
+            100% {
+              transform: translate(-50%, 50%) scale(2.5);
+              opacity: 0;
+            }
+          }
+
+          /* Pin icon styling */
+          .zone-pin-icon {
+            position: relative;
+            width: 38px;
+            height: 48px;
+            filter: drop-shadow(0 8px 16px rgba(45, 25, 95, 0.35));
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: block;
+          }
+          .zone-pin-wrapper:hover .zone-pin-icon {
+            transform: translateY(-4px) scale(1.06);
+          }
+
+          /* Custom sleek tooltip */
+          .leaflet-tooltip.zone-map-tooltip {
+            background: rgba(26, 18, 56, 0.92);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            padding: 5px 11px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(6px);
+          }
+          .leaflet-tooltip-top.zone-map-tooltip::before {
+            border-top-color: rgba(26, 18, 56, 0.92);
+          }
+        </style>
+      </head>
+      <body>
+        <div id="map"></div>
+        <script type="module">
+          import * as LeafletModule from 'leaflet';
+          import { maplibreGL } from 'https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/dist/leaflet-maplibre-gl.mjs';
+          const L = LeafletModule.default || LeafletModule;
+
+          const map = L.map('map', {
+            attributionControl: true,
+            zoomControl: true,
+            minZoom: 1,
+            maxBounds: [[180, -Infinity], [-180, Infinity]],
+            maxBoundsViscosity: 1
+          }).setView([${lat}, ${lng}], 15);
+          map.attributionControl.setPrefix(false);
+
+          const vectorLayer = maplibreGL({
+            style: 'https://tiles.openfreemap.org/styles/positron',
+            attributionControl: {
+              customAttribution: 'OpenFreeMap | © OpenMapTiles | Data from OpenStreetMap'
+            }
+          }).addTo(map);
+          const mapLibreMap = vectorLayer.getMaplibreMap();
+          mapLibreMap.once('style.load', () => {
+            ['highway-shield-non-us', 'highway-shield-us-interstate', 'road_shield_us'].forEach((layerId) => {
+              if (mapLibreMap.getLayer(layerId)) {
+                mapLibreMap.setLayoutProperty(layerId, 'visibility', 'none');
+              }
+            });
+          });
+
+          const pinHtml = \`
+            <div class="zone-pin-wrapper">
+              <div class="zone-pin-pulse"></div>
+              <svg class="zone-pin-icon" viewBox="0 0 38 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="pinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#a48df0"/>
+                    <stop offset="50%" stop-color="#8b72e6"/>
+                    <stop offset="100%" stop-color="#694cd4"/>
+                  </linearGradient>
+                </defs>
+                <path d="M19 0C8.50659 0 0 8.50659 0 19C0 31.8 19 48 19 48C19 48 38 31.8 38 19C38 8.50659 29.4934 0 19 0Z" fill="url(#pinGrad)"/>
+                <circle cx="19" cy="18" r="8" fill="#ffffff"/>
+                <circle cx="19" cy="18" r="4" fill="#694cd4"/>
+              </svg>
+            </div>
+          \`;
+
+          const marker = L.marker([${lat}, ${lng}], {
+            draggable: true,
+            icon: L.divIcon({
+              className: 'zone-custom-div-icon',
+              html: pinHtml,
+              iconSize: [38, 48],
+              iconAnchor: [19, 48]
+            })
+          }).addTo(map);
+
+          marker.bindTooltip("Point de livraison", {
+            permanent: false,
+            direction: 'top',
+            offset: [0, -48],
+            className: 'zone-map-tooltip'
+          });
+
+          const notifyParent = (point) => {
+            const message = { type: 'leaflet-location', lat: point.lat, lng: point.lng };
+            if (window.ReactNativeWebView) {
+              window.ReactNativeWebView.postMessage(JSON.stringify(message));
+            } else {
+              window.parent.postMessage(message, '*');
+            }
+          };
+
+          map.on('click', (event) => {
+            marker.setLatLng(event.latlng);
+            map.panTo(event.latlng, { animate: true, duration: 0.35 });
+            notifyParent(event.latlng);
+          });
+
+          marker.on('dragend', () => {
+            const pos = marker.getLatLng();
+            notifyParent(pos);
+          });
+
+          const resizeMap = () => setTimeout(() => map.invalidateSize(), 100);
+          window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'leaflet-resize') resizeMap();
+          });
+          resizeMap();
+          setTimeout(() => map.invalidateSize(), 600);
+        </script>
+      </body>
+    </html>
+`;
+
 export const LeafletMapPicker: React.FC<LeafletMapPickerProps> = ({ onSelectAddress, currentAddress }) => {
     const { height: windowHeight } = useWindowDimensions();
     const [modalVisible, setModalVisible] = useState(false);
@@ -45,6 +296,7 @@ export const LeafletMapPicker: React.FC<LeafletMapPickerProps> = ({ onSelectAddr
         lat: 6.1319,
         lng: 1.2228,
     });
+    const [mapHtml, setMapHtml] = useState(() => getLeafletMapHtml({ lat: 6.1319, lng: 1.2228 }));
     const [selectedPlace, setSelectedPlace] = useState<GeocodedPlace | null>(null);
     const [searching, setSearching] = useState(false);
     const [locating, setLocating] = useState(false);
@@ -53,22 +305,24 @@ export const LeafletMapPicker: React.FC<LeafletMapPickerProps> = ({ onSelectAddr
     const mapFrameRef = useRef<HTMLIFrameElement>(null);
     const mapHeight = Math.max(210, windowHeight - 360);
 
+    const handleMapLocation = (data: unknown) => {
+        if (typeof data !== 'object' || data === null || !('type' in data) || data.type !== 'leaflet-location') return;
+        if (!('lat' in data) || !('lng' in data)) return;
+
+        const { lat, lng } = data;
+        if (typeof lat !== 'number' || typeof lng !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+        setSelectedCoords({ lat, lng });
+        setSelectedPlace(null);
+        setMapError('');
+    };
+
     useEffect(() => {
         const handleMapMessage = (event: MessageEvent<unknown>) => {
             if (event.source !== mapFrameRef.current?.contentWindow || typeof event.data !== 'object' || event.data === null) {
                 return;
             }
-            if (!('type' in event.data) || event.data.type !== 'leaflet-location') return;
-            if (!('lat' in event.data) || !('lng' in event.data)) return;
-
-            const { lat, lng } = event.data;
-            if (typeof lat !== 'number' || typeof lng !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lng)) {
-                return;
-            }
-
-            setSelectedCoords({ lat, lng });
-            setSelectedPlace(null);
-            setMapError('');
+            handleMapLocation(event.data);
         };
 
         if (typeof window !== 'undefined') {
@@ -107,6 +361,7 @@ export const LeafletMapPicker: React.FC<LeafletMapPickerProps> = ({ onSelectAddr
             }
 
             setSelectedCoords({ lat, lng });
+            setMapHtml(getLeafletMapHtml({ lat, lng }));
             setSelectedPlace(place);
             setSearchQuery(place.display_name);
         } catch (error) {
@@ -126,7 +381,9 @@ export const LeafletMapPicker: React.FC<LeafletMapPickerProps> = ({ onSelectAddr
         setMapError('');
         navigator.geolocation.getCurrentPosition(
             ({ coords }) => {
-                setSelectedCoords({ lat: coords.latitude, lng: coords.longitude });
+                const location = { lat: coords.latitude, lng: coords.longitude };
+                setSelectedCoords(location);
+                setMapHtml(getLeafletMapHtml(location));
                 setSelectedPlace(null);
                 setLocating(false);
             },
@@ -184,7 +441,10 @@ export const LeafletMapPicker: React.FC<LeafletMapPickerProps> = ({ onSelectAddr
         <View style={styles.container}>
             <TouchableOpacity
                 style={styles.mapTriggerBtn}
-                onPress={() => setModalVisible(true)}
+                onPress={() => {
+                    setMapHtml(getLeafletMapHtml(selectedCoords));
+                    setModalVisible(true);
+                }}
                 activeOpacity={0.8}
             >
                 <View style={styles.triggerIcon}>
@@ -254,48 +514,33 @@ export const LeafletMapPicker: React.FC<LeafletMapPickerProps> = ({ onSelectAddr
                         {mapError ? <Text style={styles.mapError}>{mapError}</Text> : null}
 
                         <View style={[styles.mapViewFrame, { height: mapHeight }]}>
-                            <iframe
-                                ref={mapFrameRef}
-                                title="Leaflet Map"
-                                style={{ width: '100%', height: '100%', border: 'none' }}
-                                srcDoc={`
-                                    <!DOCTYPE html>
-                                    <html>
-                                      <head>
-                                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                                        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-                                        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-                                        <style>
-                                          html, body, #map { width: 100%; height: 100%; margin: 0; }
-                                          .leaflet-control-zoom a { color: #111 !important; }
-                                          .leaflet-control-attribution { font-size: 10px !important; }
-                                        </style>
-                                      </head>
-                                      <body>
-                                        <div id="map"></div>
-                                        <script>
-                                          const map = L.map('map').setView([${selectedCoords.lat}, ${selectedCoords.lng}], 15);
-                                          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                                            attribution: '&copy; OpenStreetMap contributors',
-                                            maxZoom: 19
-                                          }).addTo(map);
-                                          const marker = L.marker([${selectedCoords.lat}, ${selectedCoords.lng}], { draggable: true }).addTo(map);
-                                          const notifyParent = (point) => window.parent.postMessage({
-                                            type: 'leaflet-location',
-                                            lat: point.lat,
-                                            lng: point.lng
-                                          }, '*');
-                                          map.on('click', (event) => {
-                                            marker.setLatLng(event.latlng);
-                                            notifyParent(event.latlng);
-                                          });
-                                          marker.on('dragend', () => notifyParent(marker.getLatLng()));
-                                          setTimeout(() => map.invalidateSize(), 100);
-                                        </script>
-                                      </body>
-                                    </html>
-                                `}
-                            />
+                            {Platform.OS === 'web' ? (
+                                <iframe
+                                    ref={mapFrameRef}
+                                    title="Leaflet Map"
+                                    style={{ width: '100%', height: '100%', border: 'none' }}
+                                    srcDoc={mapHtml}
+                                    onLoad={() => {
+                                        mapFrameRef.current?.contentWindow?.postMessage({ type: 'leaflet-resize' }, '*');
+                                    }}
+                                />
+                            ) : (
+                                <WebView
+                                    originWhitelist={['*']}
+                                    source={{ html: mapHtml }}
+                                    javaScriptEnabled
+                                    domStorageEnabled
+                                    style={{ width: '100%', height: '100%', backgroundColor: '#f3efff' }}
+                                    onMessage={(event) => {
+                                        try {
+                                            const data: unknown = JSON.parse(event.nativeEvent.data);
+                                            handleMapLocation(data);
+                                        } catch (error) {
+                                            setMapError(`Impossible de lire la position sélectionnée : ${String(error)}`);
+                                        }
+                                    }}
+                                />
+                            )}
                             <TouchableOpacity
                                 style={styles.locateBtn}
                                 onPress={handleLocateMe}
@@ -445,7 +690,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#111111',
+        backgroundColor: '#8b72e6',
     },
     mapError: {
         color: '#111111',
@@ -454,51 +699,61 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     mapViewFrame: {
-        flex: 0,
-        borderRadius: 16,
+        flexShrink: 0,
+        borderRadius: 18,
         overflow: 'hidden',
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#f4f1fa',
+        borderWidth: 1.5,
+        borderColor: '#e5dcff',
         position: 'relative',
+        shadowColor: '#362370',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 3,
     },
     locateBtn: {
         position: 'absolute',
-        top: 16,
-        right: 16,
-        width: 48,
-        height: 48,
+        top: 14,
+        right: 14,
+        width: 44,
+        height: 44,
         borderRadius: 14,
-        backgroundColor: '#111111',
-        borderWidth: 1,
+        backgroundColor: '#8b72e6',
+        borderWidth: 1.5,
         borderColor: '#ffffff',
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.16,
-        shadowRadius: 4,
-        elevation: 3,
+        shadowColor: '#2b1b59',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.22,
+        shadowRadius: 6,
+        elevation: 4,
     },
     pinInfoBadge: {
         position: 'absolute',
         bottom: 12,
         left: 12,
-        backgroundColor: '#ffffff',
+        backgroundColor: 'rgba(255, 255, 255, 0.94)',
         paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 12,
+        paddingVertical: 7,
+        borderRadius: 20,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-        shadowColor: '#000000',
+        borderWidth: 1,
+        borderColor: 'rgba(139, 114, 230, 0.25)',
+        shadowColor: '#2b1b59',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
+        shadowOpacity: 0.12,
+        shadowRadius: 5,
         elevation: 3,
     },
     pinInfoText: {
         fontSize: 11,
         fontWeight: '800',
-        color: '#111111',
+        color: '#4b3894',
+        letterSpacing: 0.2,
     },
     mapHint: {
         fontSize: 12,
@@ -508,13 +763,18 @@ const styles = StyleSheet.create({
     },
     confirmLocationBtn: {
         minHeight: 50,
-        backgroundColor: '#111111',
+        backgroundColor: '#8b72e6',
         borderRadius: 14,
         paddingVertical: 14,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
+        shadowColor: '#8b72e6',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
+        elevation: 3,
     },
     confirmBtnText: {
         color: '#ffffff',
